@@ -4,15 +4,15 @@ requires = ["setuptools", "setuptools-scm"]
 
 
 [tool.setuptools]
-py_modules = ["my_plugin"]
+py_modules = ["viewport_2_optimizer"]
 
 
 [project]
-name = "my_plugin"
+name = "viewport_2_optimizer"
 authors = [
     {name = "Hannes"},
 ]
-description = "a demo plugin for a maya template"
+description = "viewport_2_optimizer"
 readme = "README.md"
 requires-python = ">=3.4"
 keywords = ["maya", "plugin"]
@@ -33,4 +33,4 @@ version = "0.0.1"
 # my-script = "my_package.module:function"
 
 [project.urls]
-Homepage = "https://github.com/hannesdelbeke/maya-plugin-template"
+Homepage = "https://github.com/hannesdelbeke/maya-viewport-2.0-optimizer"
