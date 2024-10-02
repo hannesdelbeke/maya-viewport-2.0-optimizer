@@ -7,4 +7,6 @@ Optimize the maya 2.0 viewport. make it ugly but fast.
 - it installs the Python plugin
     
 ## usage
-run from menu `Display/Optimize viewport 2.0` and `Display/Reset viewport 2.0`
+run from menu  
+`Display/Optimize viewport 2.0`  
+`Display/Reset viewport 2.0`  
