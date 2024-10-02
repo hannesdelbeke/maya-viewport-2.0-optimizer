@@ -10,13 +10,16 @@ import maya.mel as mel
 # The below sample will create a new menu and menu-item: ToolsMenu/My cool tool
 # MENU_NAME is the name maya assigns to a menu, this is not always the same as the visible label
 # e.g. to parent to the default Maya menu 'Windows', use MENU_NAME="mainWindowMenu"
-MENU_NAME = "ToolsMenu"  # no spaces in names, use CamelCase. Used to find and parent to a menu.
-MENU_LABEL = "Tools"  # spaces are allowed in labels, only used when we create a new menu
-MENU_ENTRY_LABEL = "My cool tool"
+MENU_NAME = "mainDisplayMenu"  # no spaces in names, use CamelCase. Used to find and parent to a menu.
+# MENU_LABEL = "Display"  # spaces are allowed in labels, only used when we create a new menu
+MENU_ENABLE_LABEL = "optimize viewport 2.0"
+MENU_DISABLE_LABEL = "reset viewport 2.0"
 
 MENU_PARENT = "MayaWindow"  # do not change
 
-__menu_entry_name = "" # Store generated menu item, used when unregister
+# Store generated menu items, used when unregister
+__menu_entry_name1 = ""
+__menu_entry_name2 = ""
 
 
 def maya_useNewAPI():  # noqa
@@ -24,60 +27,77 @@ def maya_useNewAPI():  # noqa
     pass
 
 
-# # =============================== Command ===========================================
-# class HelloWorldCommand(om.MPxCommand):
-#     command_name = "HelloWorld"
-#
-#     # def __init__(self):
-#     #     om.MPxCommand.__init__(self)
-#
-#     # @staticmethod
-#     # def command_creator():
-#     #     return HelloWorldCommand()
-#
-#     def doIt(self, args):
-#         print("Hello World!")
-#
-#
-# def register_command(plugin):
-#     pluginFn = om.MFnPlugin(plugin)
-#     try:
-#         pluginFn.registerCommand(HelloWorldCommand.command_name, HelloWorldCommand.__init__)
-#     except Exception as e:
-#         sys.stderr.write(f"Failed to register command: {HelloWorldCommand.command_name}\n")
-#         raise e
-#
-#
-# def unregister_command(plugin):
-#     pluginFn = om.MFnPlugin(plugin)
-#     try:
-#         pluginFn.deregisterCommand(HelloWorldCommand.command_name)
-#     except Exception as e:
-#         sys.stderr.write(f"Failed to unregister command: {HelloWorldCommand.command_name}\n")
-#         raise e
+def optimize_viewport(*args, **kwargs):
+    import maya.cmds as cmds
+    import maya.mel as mel
+
+    # Performance
+    cmds.setAttr("hardwareRenderingGlobals.maxHardwareLights", 1)
+    cmds.setAttr("hardwareRenderingGlobals.transparencyAlgorithm", 0)
+
+    cmds.setAttr("hardwareRenderingGlobals.enableTextureMaxRes", 1)
+    cmds.setAttr("hardwareRenderingGlobals.textureMaxResMode", 1)
+    cmds.setAttr("hardwareRenderingGlobals.textureMaxResolution", 256)
+    mel.eval("source AEhardwareRenderingGlobalsTemplate;")
+    mel.eval("AEReloadAllTextures;")
+
+    cmds.setAttr("hardwareRenderingGlobals.colorBakeResolution", 16)
+    cmds.setAttr("hardwareRenderingGlobals.bumpBakeResolution", 16)
+
+    # Ambient Occlusion
+    cmds.setAttr("hardwareRenderingGlobals.ssaoEnable", 0)
+    cmds.setAttr("hardwareRenderingGlobals.ssaoSamples", 8)
+
+    # Motion Blur
+    cmds.setAttr("hardwareRenderingGlobals.motionBlurEnable", 0)
+    cmds.setAttr("hardwareRenderingGlobals.motionBlurSampleCount", 4)
+
+    # Anti Aliasing
+    cmds.setAttr("hardwareRenderingGlobals.lineAAEnable", 0)
+    cmds.setAttr("hardwareRenderingGlobals.multiSampleEnable", 0)
+
+    # May result in banding but has a big impact on speed
+    cmds.setAttr("hardwareRenderingGlobals.floatingPointRTEnable", 0)
+
+    # Animation caching
+    cmds.setAttr("hardwareRenderingGlobals.vertexAnimationCache", 2)
+
+    # Optimise SkinClusters
+    for skin_cluster in cmds.ls(type='skinCluster', l=True):
+        cmds.setAttr(skin_cluster + ".deformUserNormals", 0)
+
+    cmds.confirmDialog(title="Viewport Optimisation", message="Optimisation Complete")
 
 
-# =============================== Menu ===========================================
-def show(*args):
-    """this command is run when clicked in the Maya menu, replace it with your own code"""
-    # import your custom module here, instead of at the top of the python file.
-    # to always enable Maya to activate your plugin & create the menu, even if there are compile errors in your code.
-    # it also means no code will run untill the user clicks the menu, a good practice to keep Maya startup fast.
-    # often you create your Qt Widget here and then show it.
-    print("hello")
+def reset_viewport(*args, **kwargs):
+    import maya.cmds as cmds
+    import maya.mel as mel
+
+    try:
+        mel.eval("hardwareRenderingGlobalsRevertToDefault")
+        cmds.confirmDialog(title="Viewport Reset", message="Reset Complete")
+
+        mel.eval("AEReloadAllTextures;")
+        
+        for skin_cluster in cmds.ls(type='skinCluster', l=True):
+            cmds.setAttr(skin_cluster + ".deformUserNormals", 1)
+    except:
+        pass
 
 
 def loadMenu():
     """Setup the Maya menu, runs on plugin enable"""
-    global __menu_entry_name
+    global __menu_entry_name1
+    global __menu_entry_name2
 
     # Maya builds its menus dynamically upon being accessed, so they don't exist if not yet accessed.
     # We force a menu build to allow parenting any new menu under a default Maya menu
     mel.eval("evalDeferred buildFileMenu")  # delete this if not parenting menus to a default Maya Menu
 
-    if not cmds.menu(f"{MENU_PARENT}|{MENU_NAME}", exists=True):
-        cmds.menu(MENU_NAME, label=MENU_LABEL, parent=MENU_PARENT)
-    __menu_entry_name = cmds.menuItem(label=MENU_ENTRY_LABEL, command=show, parent=MENU_NAME)
+    # if not cmds.menu(f"{MENU_PARENT}|{MENU_NAME}", exists=True):
+    #     cmds.menu(MENU_NAME, label=MENU_LABEL, parent=MENU_PARENT)
+    __menu_entry_name1 = cmds.menuItem(label=MENU_ENABLE_LABEL, command=optimize_viewport, parent=MENU_NAME)
+    __menu_entry_name2 = cmds.menuItem(label=MENU_DISABLE_LABEL, command=reset_viewport, parent=MENU_NAME)
 
 
 def unloadMenuItem():
@@ -85,8 +105,10 @@ def unloadMenuItem():
     if cmds.menu(f"{MENU_PARENT}|{MENU_NAME}", exists=True):
         menu_long_name = f"{MENU_PARENT}|{MENU_NAME}"
         # Check if the menu item exists; if it does, delete it
-        if cmds.menuItem(__menu_entry_name, exists=True):
-            cmds.deleteUI(__menu_entry_name, menuItem=True)
+        if cmds.menuItem(__menu_entry_name1, exists=True):
+            cmds.deleteUI(__menu_entry_name1, menuItem=True)
+        if cmds.menuItem(__menu_entry_name2, exists=True):
+            cmds.deleteUI(__menu_entry_name2, menuItem=True)
         # Check if the menu is now empty; if it is, delete the menu
         if not cmds.menu(menu_long_name, query=True, itemArray=True):
             cmds.deleteUI(menu_long_name, menu=True)
