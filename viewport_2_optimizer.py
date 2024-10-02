@@ -12,8 +12,8 @@ import maya.mel as mel
 # e.g. to parent to the default Maya menu 'Windows', use MENU_NAME="mainWindowMenu"
 MENU_NAME = "mainDisplayMenu"  # no spaces in names, use CamelCase. Used to find and parent to a menu.
 # MENU_LABEL = "Display"  # spaces are allowed in labels, only used when we create a new menu
-MENU_ENABLE_LABEL = "optimize viewport 2.0"
-MENU_DISABLE_LABEL = "reset viewport 2.0"
+MENU_ENABLE_LABEL = "Optimize Viewport 2.0"
+MENU_DISABLE_LABEL = "Reset Viewport 2.0"
 
 MENU_PARENT = "MayaWindow"  # do not change
 
