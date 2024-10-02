@@ -28,9 +28,6 @@ def maya_useNewAPI():  # noqa
 
 
 def optimize_viewport(*args, **kwargs):
-    import maya.cmds as cmds
-    import maya.mel as mel
-
     # Performance
     cmds.setAttr("hardwareRenderingGlobals.maxHardwareLights", 1)
     cmds.setAttr("hardwareRenderingGlobals.transparencyAlgorithm", 0)
@@ -70,19 +67,42 @@ def optimize_viewport(*args, **kwargs):
 
 
 def reset_viewport(*args, **kwargs):
-    import maya.cmds as cmds
-    import maya.mel as mel
+    # Reset performance settings to original values
+    cmds.setAttr("hardwareRenderingGlobals.maxHardwareLights", 8)
+    cmds.setAttr("hardwareRenderingGlobals.transparencyAlgorithm", 1)
 
-    try:
-        mel.eval("hardwareRenderingGlobalsRevertToDefault")
-        cmds.confirmDialog(title="Viewport Reset", message="Reset Complete")
+    cmds.setAttr("hardwareRenderingGlobals.enableTextureMaxRes", 1)
+    cmds.setAttr("hardwareRenderingGlobals.textureMaxResMode", 0)
+    cmds.setAttr("hardwareRenderingGlobals.textureMaxResolution", 2048)
+    mel.eval("source AEhardwareRenderingGlobalsTemplate;")
+    mel.eval("AEReloadAllTextures;")
 
-        mel.eval("AEReloadAllTextures;")
-        
-        for skin_cluster in cmds.ls(type='skinCluster', l=True):
-            cmds.setAttr(skin_cluster + ".deformUserNormals", 1)
-    except:
-        pass
+    cmds.setAttr("hardwareRenderingGlobals.colorBakeResolution", 64)
+    cmds.setAttr("hardwareRenderingGlobals.bumpBakeResolution", 64)
+
+    # Reset Ambient Occlusion
+    cmds.setAttr("hardwareRenderingGlobals.ssaoEnable", 0)
+    cmds.setAttr("hardwareRenderingGlobals.ssaoSamples", 16)
+
+    # Reset Motion Blur
+    cmds.setAttr("hardwareRenderingGlobals.motionBlurEnable", 0)
+    cmds.setAttr("hardwareRenderingGlobals.motionBlurSampleCount", 8)
+
+    # Reset Anti Aliasing
+    cmds.setAttr("hardwareRenderingGlobals.lineAAEnable", 0)
+    cmds.setAttr("hardwareRenderingGlobals.multiSampleEnable", 0)
+
+    # Reset floating point render target
+    cmds.setAttr("hardwareRenderingGlobals.floatingPointRTEnable", 1)
+
+    # Reset Animation caching
+    cmds.setAttr("hardwareRenderingGlobals.vertexAnimationCache", 0)
+
+    # Reset SkinClusters
+    for skin_cluster in cmds.ls(type='skinCluster', l=True):
+        cmds.setAttr(skin_cluster + ".deformUserNormals", 1)  # Assuming reset to 1 for deformUserNormals
+
+    cmds.confirmDialog(title="Viewport Reset", message="Viewport settings reset to default values")
 
 
 def loadMenu():
