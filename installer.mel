@@ -1,5 +1,5 @@
 // TODO change this to your plugin name
-string $MY_PLUGIN_NAME = "my_plugin.py";
+string $MY_PLUGIN_NAME = "viewport_2_optimizer.py";
 
 // Execute a Python command to get the path to the Maya Python interpreter
 string $mayaPythonPath = `python("import sys; f'\"{sys.executable}\"'")`;
